@@ -106,19 +106,6 @@ int* compute_gamete_stats(CSVRow* i, CSVRow* j){
         if (!((a >> 1) | (b >> 1))){
             res[a + b]++;
         }
-        /*
-        if ((*i)[k] == "-" || (*j)[k] == "-"){
-            continue;
-        } else if((*i)[k] == "0" && (*j)[k] == "0"){
-            res[0]++;
-        } else if((*i)[k] == "0" && (*j)[k] == "1"){
-            res[1]++;
-        } else if((*i)[k] == "1" && (*j)[k] == "0"){
-            res[2]++;
-        } else if ((*i)[k] == "1" && (*j)[k] == "1"){
-            res[3]++;
-        }
-        */
     }
     return res;
 
