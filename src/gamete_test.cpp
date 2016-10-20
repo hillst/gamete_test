@@ -7,6 +7,9 @@
 #include <sstream>
 #include <vector>
 #include <ctime>
+
+#define MIN_OBS 4
+//oof thats like 10%!
 /**
  * Code for generating the data for gamete test:
 
@@ -94,25 +97,36 @@ class CSVIterator{
         CSVRow m_row;
 };
 
-int* compute_gamete_stats(CSVRow* i, CSVRow* j){
-    int * res = new int[4];
+void compute_gamete_stats(CSVRow* i, CSVRow* j, int * res){
+    /*
+     * Returns a count vector for the possible haplotypes (00,01,10,11)
+     */
     for (int k = 0; k < 4; k++){ res[k]=0; }
 
     for (int k = 1; k < i->size(); k++){ // start at 1 to skip the site-name column
         // im leaving you a puzzle
         int a = ((*i)[k].c_str()[0] - 48); // 0 = 0, 1 = 1, 2 = missing
         int b = ((*j)[k].c_str()[0] - 48); // im a bitmaster
-        
+
         if (!((a >> 1) | (b >> 1))){
-            res[a + b]++;
+            res[(a << 1) + b]++;
         }
     }
-    return res;
 
 }
 
-void print_results(vector<int *> vals) {
+void print_results(vector<float *> vals) {
     for (int i =0 ; i < vals.size(); i++){
+        for(int j = 0; j < 4; j++){
+            cout << vals.at(i)[j] << " ";
+        }
+        cout << endl;
+    }
+}
+
+void print_aggregate(vector<float *> vals, vector<string> site_names){
+    for (int i =0 ; i < vals.size(); i++){
+        cout << site_names.at(i) << " ";
         for(int j = 0; j < 4; j++){
             cout << vals.at(i)[j] << " ";
         }
@@ -120,36 +134,78 @@ void print_results(vector<int *> vals) {
     }
     
 }
-int main(){
-//    ifstream file("shm_normal_B.csv"); // full data
-    //ifstream file("shm_normal_B_100k.csv"); //slowest test
 
-    ifstream file("plop.csv"); //fastest test
+int main(int argc, char** argv){
+    //ifstream file("shm_normal_B.fixed.csv"); // full data
+//    ifstream file("shm_normal_B.X.csv"); // x chromosome only
+//    ifstream file("shm_normal_B_10k.csv"); //slowest test
+
+    ifstream file(argv[1]); //fastest test
     vector<CSVRow> data;
-    cout << "Loading data..." << endl;
+    cerr << "Loading data..." << endl;
     int idx = 0;
+    vector<string> site_lookup;
     for(CSVIterator loop(file); loop != CSVIterator(); ++loop){
         if (idx == 0){
             idx++;
-        } else if ((*loop).count_present() < 4){
+        } else if ((*loop).count_present() < MIN_OBS){
             continue;
         } else{
             data.push_back((*loop));
+            site_lookup.push_back((*loop)[0]);
         }
-
     }
+    int * result = new int[4];
 
-    vector<int*> results;    
+    vector<float*> results;    
     time_t start = time(NULL);
+    // we are still looking to get faster, we need speedup from somewhere of about 1 order of magnitude
+    //  maybe we can get it from unrolling the loop? are i and j continugous in memory?
+    cerr << "processing "<< data.size() << " sites" << endl;
     for (int i = 0; i < data.size(); i++){
-        for (int j = 0; j < i; j++){
-            int genotypes[4];
-            int * result = compute_gamete_stats(&data.at(i), &data.at(j));
-            results.push_back(result);
+        CSVRow left = data.at(i);
+        //float * aggregate = new float[4];
+
+        //working on this mess -- modularize this.
+        //for (int k = 0; k < 4; k++){ aggregate[k] = 0; }
+        
+        float zz = 0; float zo = 0; float oz = 0; float oo =0;
+        #pragma omp parallel for reduction(+:zz,zo,oz,oo)
+        for (int j = 0; j < data.size(); j++){
+            float total = 0;
+            int * result = new int[4];
+            compute_gamete_stats(&left, &data.at(j), result);
+            //we could be missing cache here
+            for (int k = 0; k < 4; k++){
+                total += result[k];
+            }
+            if (total != 0){ // ignores it in the case our denomenator is 0 (this is desired behavior)
+                zz += result[0] / total;
+                zo += result[1]/ total;
+                oz += result[2]/total;
+                oo += result[3]/total;
+            }
+            delete [] result;
+            // now they are all the same so we should probably try just counting first
         }
+        float total = 0;
+        total = zz + zo + oz + oo;
+        zz /= total;
+        zo /= total; 
+        oz /= total; 
+        oo /= total;
+        //for (int k = 0; k < 4; k++){ total+=aggregate[k];}
+        //for (int k = 0; k < 4; k++){ aggregate[k] /= total; }
+        float * aggregate = new float[4];
+        aggregate[0] = zz; aggregate[1] = zo; aggregate[2] = oz; aggregate[3] = oo; 
+        results.push_back(aggregate);
         cerr << "processed outer " << i << " " << (i+1) / (time(NULL) - start + .0001) <<  " sites/second \r";
     }
-    print_results(results);
+    
+    cerr << "\nprocessed at: " << (data.size()) / (time(NULL) - start + .0001) <<  " sites/second \n";  
+    cerr << "elapsed: " << time(NULL) - start << endl;
+    cerr << "elapsed: " << (time(NULL) - start) / 1000<< endl;
+    print_aggregate(results, site_lookup);
 }
 
 
