@@ -1,19 +1,15 @@
-Gamete test is as follows:
+#Compiling
+Compile with make. no dependencies
+$make
 
-for every pair of sites:
-    How many combinations of gametes do we see? that is:
-        00
-        01
-        10
-        11
+#Running
+bin/gamete\_test to run the program
 
-    If you see all 4 gametes then there is no perfect phylogeny.
+#Directory strucuture
+- src contains all cpp and h files.
+- lib contains all external dependencies
+- bin contains the compiled executables
 
-Idea:
-    do this for all sites and see how this looks genome wide.
-
-Problems:
-    filtering criteria? well we need atleast 4 cells, but more would be better!
-
-    First pass? lets look at normal b cells
+NOTES.md just has some thoughts jotted down
+EXPERIMENTs.md has the current thing we are working on (experiment)
 
