@@ -8,7 +8,7 @@
 #include <vector>
 #include <ctime>
 
-#define MIN_OBS 4
+#define MIN_OBS 40
 //oof thats like 10%!
 /**
  * Code for generating the data for gamete test:
@@ -209,7 +209,6 @@ int main(int argc, char** argv){
                                             // count is off by one (which is what we want)
             }
             delete [] result;
-            // now they are all the same so we should probably try just counting first
         }
      //   results.push_back(total);
 
