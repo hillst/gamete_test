@@ -9,8 +9,9 @@
 #include <vector>
 #include <ctime>
 #include <limits.h>
+#include "CSVRow.cpp"
 
-#define MIN_OBS 40
+#define MIN_OBS 10
 #define GAMMA .0000001f
 /**
  * Code for generating the data for gamete test:
@@ -26,75 +27,6 @@
 
  */
 using namespace std;
-class CSVRow
-{
-    public:
-        string const& operator[](size_t index) const{
-            return m_data[index];
-        }
-        size_t size() const{
-            return m_data.size();
-        }
-        void readNextRow(istream& str){
-            string line;
-            getline(str, line);
-
-            stringstream lineStream(line);
-            string cell;
-
-            m_data.clear();
-            while(getline(lineStream, cell, ',')){
-                m_data.push_back(cell);
-            }
-        }
-        int get_total_sites() const{
-            return m_data.size();
-        }
-        int count_missing() const{
-            int count = 0;
-            for (int i = 0; i < this->size(); i++){
-                if (m_data[i] == "2"){
-                    count += 1;
-                }
-            }
-            return count;
-        }
-        int count_present() const{
-            return this->get_total_sites() - this->count_missing();
-        }
-
-    private:
-        vector<string> m_data;
-};
-
-istream& operator>>(istream& str, CSVRow& data){
-    data.readNextRow(str);
-    return str;
-}  
-
-class CSVIterator{   
-    public:
-        typedef input_iterator_tag iterator_category;
-        typedef CSVRow  value_type;
-        typedef size_t  difference_type;
-        typedef CSVRow* pointer;
-        typedef CSVRow& reference;
-
-        CSVIterator(istream& str):m_str(str.good()?&str:NULL) { ++(*this); }
-        CSVIterator():m_str(NULL) {}
-
-        CSVIterator& operator++()               {if (m_str) { if (!((*m_str) >> m_row)){m_str = NULL;}}return *this;}
-        CSVIterator operator++(int)             {CSVIterator    tmp(*this);++(*this);return tmp;}
-        CSVRow const& operator*()   const       {return m_row;}
-        CSVRow const* operator->()  const       {return &m_row;}
-
-        bool operator==(CSVIterator const& rhs) {return ((this == &rhs) || ((this->m_str == NULL) && (rhs.m_str == NULL)));}
-        bool operator!=(CSVIterator const& rhs) {return !((*this) == rhs);}
-
-    private:
-        istream* m_str;
-        CSVRow m_row;
-};
 
 long int site_distance(string a, string b){
     /*
@@ -308,12 +240,11 @@ void print_histf(float ** hist, int size_i, int size_j, string hist_name){
     }
 }
 
-int main(int argc, char** argv){
-    ifstream file(argv[1]); //fastest test
-    vector<CSVRow> data;
+
+void load_data(char * filename, vector<CSVRow> &data, vector<string>  &site_lookup){
+    ifstream file(filename); //fastest test
     cerr << "Loading data..." << endl;
     int idx = 0;
-    vector<string> site_lookup;
     for(CSVIterator loop(file); loop != CSVIterator(); ++loop){
         if (idx == 0){
             idx++;
@@ -324,6 +255,14 @@ int main(int argc, char** argv){
             site_lookup.push_back((*loop)[0]);
         }
     }
+}
+
+int main(int argc, char** argv){
+    ifstream file(argv[1]); //fastest test
+    vector<CSVRow> data;
+    vector<string> site_lookup;
+    load_data(argv[1], data, site_lookup);
+
     int * result = new int[4];
     // we can have a bunch of functions for our prepare and our filtering pipeline
 
