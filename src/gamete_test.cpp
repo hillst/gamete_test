@@ -232,10 +232,6 @@ int compute_mi(CSVRow* i, CSVRow* j, int * res, float * mi){
 
     //set return variable
     *mi = h_x - h_xgy;
-    if (*mi < 1){
-        cout << portion_y0 << " " << portion_y1 << " ";
-        cout << h_x << " " << h_xgy << endl;
-    }
 
     return count;
 }
@@ -405,12 +401,11 @@ int main(int argc, char** argv){
                 if (site_distance(site_lookup.at(i), site_lookup.at(j)) < 100){
                     hist_close[count][n_alleles-1]++;
                     hist_mi_g_obs_close[count][int(mi * 100)]++; // right we want counts
-                    cerr << mi << int(mi * 100) << " " << n_alleles-1 << endl;;
                     hist_pf_g_mi_close[int(mi * 100)][n_alleles-1]++; // right we want counts
                 } else{
                     hist_far[count][n_alleles-1]++;
                     hist_mi_g_obs_far[count][int(mi * 100)]++; // right we want counts
-   //                 hist_pf_g_mi_far[int(mi * 100)][n_alleles-1]++; // right we want counts
+                    hist_pf_g_mi_far[int(mi * 100)][n_alleles-1]++; // right we want counts
                 }
             }
             delete [] result;
