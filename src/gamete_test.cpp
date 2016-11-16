@@ -1,4 +1,5 @@
 #include <stdio.h>
+
 #include <stdlib.h>
 #include <boost/tokenizer.hpp>
 #include <string>
@@ -9,10 +10,19 @@
 #include <vector>
 #include <ctime>
 #include <limits.h>
-#include "CSVRow.cpp"
+
+
+#ifndef CSVROW 
+    #define CSVROW 1
+    #include "CSVRow.h"
+    #include "metrics.h"
+#endif
 
 #define MIN_OBS 10
-#define GAMMA .0000001f
+
+#ifndef GAMMA
+    #define GAMMA .0000001f
+#endif
 /**
  * Code for generating the data for gamete test:
 
@@ -75,11 +85,16 @@ int compute_mi(CSVRow* i, CSVRow* j, int * res, float * mi){
     for (int k = 0; k < 4; k++){ res[k]=0; n_xy[k] =0; n_xgy[k] = 0;}
 
     int count = 0;
+
     for (int k = 1; k < i->size(); k++){ // start at 1 to skip the site-name column
         // im leaving you a puzzle
         // number of times puzzle tripped me up (to date): 1
         int a = ((*i)[k].c_str()[0] - 48); // 0 = 0, 1 = 1, 2 = missing
         int b = ((*j)[k].c_str()[0] - 48); // im a bitmaster
+        if (!(b>>1)){
+            count++;
+        }
+        
         if (!((b>>1) | (a>>1))){
             n_xgy[(a << 1) + b]++; 
             // these are for p(x=0), p(x=1)
@@ -92,7 +107,6 @@ int compute_mi(CSVRow* i, CSVRow* j, int * res, float * mi){
             n_xy[a]++;
         }  else if( !(b >> 1) ){
             // count gives us n_obs_i  (although tehcnically j...)
-            count++; //
             n_xy[b]++;
         }
     } //so now we need P(X), P(X|Y)
@@ -283,6 +297,8 @@ int main(int argc, char** argv){
     auto hist_pf_g_mi_close = new float[101][4]; //given mutual information what is the probabilty we fail
     auto hist_pf_g_mi_far = new float[101][4]; //given mutual information what is the probabilty we fail
 
+    PFailGiveMutualInfo * metric = new PFailGiveMutualInfo(100); //n_alleles
+
     for(int i =0; i < 101; i++){
         for (int j = 0; j < 4; j++){hist_pf_g_mi_close[i][j] = 0.f; hist_pf_g_mi_far[i][j] =0.f;}
     } 
@@ -298,7 +314,7 @@ int main(int argc, char** argv){
         }
     }
 
-
+    
     for (int i = 0; i < data.size(); i++){
         CSVRow left = data.at(i);
         //float * aggregate = new float[4];
@@ -316,6 +332,8 @@ int main(int argc, char** argv){
             // used to be here
         //    int * result = new int[4];
             float mi;
+            metric->compute_metric(&left, &data.at(j));
+            continue;
             int count = compute_mi(&left, &data.at(j), result, &mi); // count is n_miss
       
             //we could be missing cache here
