@@ -1,8 +1,8 @@
 #include <stdio.h>
 
-#include <stdlib.h>
-#include <boost/tokenizer.hpp>
 #include <string>
+
+#include <stdlib.h>
 #include <iostream>
 #include <iterator>
 #include <fstream>
@@ -18,7 +18,7 @@
     #include "metrics.h"
 #endif
 
-#define MIN_OBS 10
+#define MIN_OBS 40
 
 #ifndef GAMMA
     #define GAMMA .0000001f
@@ -323,7 +323,7 @@ int main(int argc, char** argv){
         //for (int k = 0; k < 4; k++){ aggregate[k] = 0; }
         
         // check the race condition (although im fairly certain i already have)
-        #pragma omp parallel for reduction(+:count)
+        #pragma omp parallel for
         for (int j = 0; j < data.size(); j++){
             if (i == 0 && j == 0)
                 cout << "starting inner" << endl;
@@ -370,9 +370,13 @@ int main(int argc, char** argv){
         }
         cerr << "processed outer " << i << " " << (i+1) / (time(NULL) - start + .0001) <<  " sites/second \r";
     }
+    cout << "Done with that last thing :)"  << endl;
 
     //print histogram routine  --- auto is hurting us here...
-    cout << "#hist_close" << endl;
+    cout << "#hist" << endl;
+    metric->print_result();
+
+    return 0;
     for (int i =0; i < data[0].size(); i++){
         for ( int j = 0; j < 4; j++){
             cout << hist_close[i][j] << " ";

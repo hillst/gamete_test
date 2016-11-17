@@ -51,6 +51,12 @@ PFailGiveMutualInfo& PFailGiveMutualInfo::operator=(const PFailGiveMutualInfo&){
 
 void PFailGiveMutualInfo::print_result(){
     //prints data! could be more generic if we let it take the shape of the histgram
+    for (int i = 0; i <= this->resolution; i++){
+	for (int j = 0; j < this->n_alleles; j++){
+	    cout << this->hist_far[i][j] << " ";
+	}
+ 	cout << endl;	
+    }
 }
 void PFailGiveMutualInfo::compute_metric(const CSVRow* i, const CSVRow* j){
     /*
@@ -65,8 +71,8 @@ void PFailGiveMutualInfo::compute_metric(const CSVRow* i, const CSVRow* j){
     // mutual information is a float.
     float H_x = 0.f;
     float H_xgy = 0.f;
-    float n_xy[2];
-    float n_xgy[4]; //these correspond to two things: the gametes we observe and the order, so 0 | 0, 0 | 1... etc
+    float n_xy[2] = {0.f, 0.f};
+    float n_xgy[4] = {0.f, 0.f, 0.f, 0.f}; //these correspond to two things: the gametes we observe and the order, so 0 | 0, 0 | 1... etc
     float p_x0=0.f; float p_x1=0.f; float p_y0=0.f; float p_y1=0.f;
     float p_x0_y0=0.f; float p_x0_y1=0.f; float p_x1_y0=0.f; float p_x1_y1=0.f;
     float portion_y0 = 0.f; float portion_y1 = 0.f;
@@ -143,6 +149,7 @@ void PFailGiveMutualInfo::compute_metric(const CSVRow* i, const CSVRow* j){
 
     h_xgy = portion_y0 + portion_y1;
     float mi = h_x - h_xgy; // oh right we have to do our clever rounding still.
+    #pragma omp atomic
     this->hist_far[int(mi * this->resolution)][ n_alleles ]++; 
     
 }
