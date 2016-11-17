@@ -18,7 +18,7 @@
     #include "metrics.h"
 #endif
 
-#define MIN_OBS 40
+#define MIN_OBS 10
 
 #ifndef GAMMA
     #define GAMMA .0000001f
