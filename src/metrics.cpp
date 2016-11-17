@@ -4,10 +4,8 @@
  *    we will be doing O(n) for all metrics which is not ideal!
  *    if our metric is stateful we could get clever there, like we havei nternal data, and we are updating.
 
- * WHERE WE AT
- *   We did something with our 2d vectors... gotta get that working dynamically and i'd 
- *     prefer not to have a new class. maybe structs. maybe a new class. dunno. 
- *     try and figure out how much data our current guy can hold and how to adjust that.
+ * WHERE WE ARE AT
+ *    ??? I think we did it :)
  */ 
 #include "metrics.h"
 #define N_ALLELES 4
@@ -18,6 +16,7 @@ PFailGiveMutualInfo::PFailGiveMutualInfo(int const resolution = 10){
      * The interal data structure will update itself as we call compute_metric or whatever
      *   So compute_metric is not immutable and not sensitive to making the same calls twice.
      *   The solution could be to provide a custom iterator to use with these metric classes 
+     *   We also could just wrap it
      */ 
     vector< vector < int > > hist_far;
     vector< vector < int > > hist_close;
